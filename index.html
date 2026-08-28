@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BreakEven IQ | Built by Kaushik</title>
+  <meta name="description" content="Interactive break-even point analysis tool with real-time sliders and chart." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Light Mode (Default) */
+      --bg:       #f8fafc;
+      --card:     #ffffff;
+      --panel:    #ffffff;
+      --border:   rgba(0,0,0,0.08);
+      --orange:   #ea580c;
+      --pink:     #d946ef;
+      --cyan:     #0284c7;
+      --green:    #16a34a;
+      --red:      #dc2626;
+      --txt:      #0f172a;
+      --txt2:     #475569;
+      --txt3:     #94a3b8;
+      --track-bg: rgba(0,0,0,0.08);
+      --input-bg: rgba(0,0,0,0.03);
+      --kpi-shad: rgba(0,0,0,0.08);
+    }
+
+    [data-theme="dark"] {
+      /* Dark Theme */
+      --bg:       #060c16;
+      --card:     #0d1626;
+      --panel:    #0b1524;
+      --border:   rgba(255,255,255,0.07);
+      --orange:   #f97316;
+      --pink:     #e879f9;
+      --cyan:     #22d3ee;
+      --green:    #4ade80;
+      --red:      #f87171;
+      --txt:      #f1f5f9;
+      --txt2:     #94a3b8;
+      --txt3:     #475569;
+      --track-bg: rgba(255,255,255,0.1);
+      --input-bg: rgba(255,255,255,0.05);
+      --kpi-shad: rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background ── */
+    .bg {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.12;
+      animation: drift linear infinite;
+    }
+    .o1 { width:500px;height:500px;background:var(--cyan);  top:-150px;left:-150px; animation-duration:22s; }
+    .o2 { width:400px;height:400px;background:var(--pink);  bottom:0;right:-100px;  animation-duration:28s;animation-delay:-10s; }
+    .o3 { width:300px;height:300px;background:var(--orange);top:40%;left:55%;       animation-duration:18s;animation-delay:-6s; }
+    @keyframes drift {
+      0%  { transform:translate(0,0) scale(1); }
+      33% { transform:translate(25px,-25px) scale(1.06); }
+      66% { transform:translate(-20px,20px) scale(0.94); }
+      100%{ transform:translate(0,0) scale(1); }
+    }
+
+    /* ── Layout ── */
+    .wrap {
+      position: relative; z-index: 1;
+      max-width: 1350px; margin: 0 auto;
+      padding: 32px 20px 52px;
+    }
+
+    /* ── Header ── */
+    header { text-align:center; margin-bottom:36px; }
+    .badge {
+      display:inline-block;
+      background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);
+      color:var(--cyan);font-size:.72rem;font-weight:700;letter-spacing:.1em;
+      text-transform:uppercase;padding:5px 14px;border-radius:100px;margin-bottom:14px;
+    }
+    h1 {
+      font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:-.03em;
+      line-height:1.1;margin-bottom:10px;
+    }
+    .grad {
+      background:linear-gradient(135deg,var(--cyan) 0%,var(--pink) 55%,var(--orange) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .sub { color:var(--txt2);font-size:1rem; }
+
+    /* ── KPI Grid ── */
+    .kpis {
+      display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;
+    }
+    @media(max-width:900px){ .kpis{grid-template-columns:repeat(2,1fr);} }
+    @media(max-width:520px){ .kpis{grid-template-columns:1fr;} }
+
+    .kpi {
+      background:var(--card);border:1px solid var(--border);
+      border-radius:18px;padding:20px;
+      transition:transform .22s,box-shadow .22s;
+    }
+    .kpi:hover{ transform:translateY(-4px);box-shadow:0 10px 32px var(--kpi-shad); }
+    .kpi-ico { font-size:1.5rem;margin-bottom:8px; }
+    .kpi-lbl {
+      font-size:.72rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:.07em;color:var(--txt3);margin-bottom:5px;
+    }
+    .kpi-val {
+      font-size:1.55rem;font-weight:800;font-family:'JetBrains Mono',monospace;
+      letter-spacing:-.03em;line-height:1;margin-bottom:5px;
+      transition:color .35s;
+    }
+    .kpi-sub { font-size:.72rem;color:var(--txt3); }
+    .kpi-bep  .kpi-val { color:var(--orange); }
+    .kpi-rev  .kpi-val { color:var(--cyan);   }
+    .kpi-pnl  .kpi-val { color:var(--green);  }
+    .kpi-cm   .kpi-val { color:var(--pink);   }
+
+    /* ── Main grid ── */
+    .main {
+      display:grid;grid-template-columns:370px 1fr;gap:18px;margin-bottom:20px;
+    }
+    @media(max-width:1100px){ .main{grid-template-columns:1fr;} }
+
+    /* ── Panels ── */
+    .panel {
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:22px;padding:26px 22px;
+    }
+    .ph {
+      display:flex;align-items:center;gap:10px;
+      font-size:.85rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:.06em;color:var(--txt2);
+      padding-bottom:16px;margin-bottom:24px;
+      border-bottom:1px solid var(--border);
+    }
+    .ph-ico { font-size:1.1rem; }
+
+    /* ── Legend ── */
+    .leg { margin-left:auto;display:flex;gap:14px;font-size:.72rem;font-weight:500;text-transform:none;letter-spacing:0; }
+    .leg-i { display:flex;align-items:center;gap:6px;color:var(--txt2); }
+    .leg-d { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+
+    /* ── Sliders ── */
+    .sg {
+      margin-bottom:24px;padding-bottom:24px;
+      border-bottom:1px solid var(--border);
+    }
+    .sg:last-of-type { border-bottom:none;margin-bottom:0;padding-bottom:0; }
+    .sg-top {
+      display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+    }
+    .sg-lbl {
+      display:flex;align-items:center;gap:8px;
+      font-size:.87rem;font-weight:600;color:var(--txt);
+    }
+    .dot {
+      width:8px;height:8px;border-radius:50%;flex-shrink:0;
+    }
+    .sg-vbox {
+      display:flex;align-items:center;gap:3px;
+      background:var(--input-bg);border:1px solid var(--border);
+      border-radius:8px;padding:5px 10px;
+    }
+    .cur,.ulab { font-size:.8rem;font-weight:600;color:var(--txt3); }
+    .ulab { margin-left:3px; }
+    .vinp {
+      background:transparent;border:none;outline:none;
+      color:var(--txt);font-family:'JetBrains Mono',monospace;
+      font-size:.9rem;font-weight:600;width:88px;text-align:right;
+      -moz-appearance:textfield;
+    }
+    .vinp::-webkit-outer-spin-button,
+    .vinp::-webkit-inner-spin-button{ -webkit-appearance:none; }
+
+    input[type="range"] {
+      -webkit-appearance:none;appearance:none;
+      width:100%;height:6px;border-radius:100px;outline:none;cursor:pointer;
+      transition:height .18s;
+    }
+    input[type="range"]:hover{ height:8px; }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;
+      box-shadow:0 2px 10px rgba(0,0,0,.5);transition:transform .15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover{ transform:scale(1.25); }
+    input[type="range"]::-moz-range-thumb{
+      width:20px;height:20px;border-radius:50%;background:#fff;border:none;
+      box-shadow:0 2px 10px rgba(0,0,0,.5);
+    }
+    .r-or { background:linear-gradient(to right,var(--orange) var(--p,20%),var(--track-bg) var(--p,20%)); }
+    .r-pk { background:linear-gradient(to right,var(--pink)   var(--p,4%),var(--track-bg) var(--p,4%)); }
+    .r-cy { background:linear-gradient(to right,var(--cyan)   var(--p,5%),var(--track-bg) var(--p,5%)); }
+    .r-gn { background:linear-gradient(to right,var(--green)  var(--p,12%),var(--track-bg) var(--p,12%)); }
+
+    .rlabs { display:flex;justify-content:space-between;font-size:.67rem;color:var(--txt3);margin-top:5px;font-family:'JetBrains Mono',monospace; }
+    .hint  { font-size:.72rem;color:var(--txt3);font-style:italic;margin-top:8px;line-height:1.4; }
+
+    /* ── Status banner ── */
+    .sb {
+      display:flex;align-items:center;gap:12px;
+      padding:13px 16px;border-radius:12px;
+      font-size:.87rem;font-weight:600;border:1px solid;
+      margin-top:16px;transition:background .35s,border-color .35s,color .35s;
+    }
+    .sb.profit   { background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.3);color:var(--green); }
+    .sb.loss     { background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.3);color:var(--orange); }
+    .sb.breakev  { background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.3);color:var(--cyan); }
+
+    /* ── Chart canvas ── */
+    .chart-panel { display:flex;flex-direction:column; }
+    .cw { position:relative;width:100%;height:420px; }
+    canvas#bep {
+      display:block;width:100%!important;height:100%!important;
+      border-radius:10px;
+    }
+    .cnote {
+      font-size:.76rem;color:var(--txt3);text-align:center;
+      margin-top:14px;font-style:italic;
+    }
+    .cnote strong { color:var(--txt2); }
+
+    /* ── Insights ── */
+    .insights { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px; }
+    @media(max-width:780px){ .insights{grid-template-columns:1fr;} }
+    .ic {
+      background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;
+      transition:transform .2s;
+    }
+    .ic:hover{ transform:translateY(-3px); }
+    .ic-t { font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--txt3);margin-bottom:7px; }
+    .ic-b { font-size:.88rem;color:var(--txt2);line-height:1.55; }
+    .ic-b em  { font-style:normal;color:var(--cyan);font-weight:600; }
+    .ic-b strong { color:var(--txt); }
+
+    footer {
+      text-align:center;font-size:.74rem;color:var(--txt3);
+      padding-top:22px;border-top:1px solid var(--border);
+    }
+
+    @keyframes pop {
+      from{ transform:translateY(6px);opacity:0; }
+      to  { transform:translateY(0);opacity:1; }
+    }
+    .popping { animation:pop .28s ease-out; }
+
+    /* ── Theme Switcher ── */
+    .theme-switch {
+      position: absolute;
+      top: 32px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .theme-sel {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--txt);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      outline: none;
+      cursor: pointer;
+    }
+    .theme-sel:hover { border-color: rgba(0,0,0,0.2); }
+    [data-theme="dark"] .theme-sel:hover { border-color: rgba(255,255,255,0.2); }
+    .theme-sel option { background: var(--bg); color: var(--txt); }
+    /* ── Author Badge & Link ── */
+    .author-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--txt);
+      text-decoration: none;
+      margin-top: 6px;
+      margin-bottom: 10px;
+      transition: all 0.25s ease;
+    }
+    .author-badge:hover {
+      transform: translateY(-2px);
+      border-color: var(--cyan);
+      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.2);
+    }
+    .author-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--pink));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      color: #ffffff;
+      font-weight: 800;
+    }
+    .author-badge strong {
+      color: var(--txt);
+    }
+    .connect-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(2, 132, 199, 0.12);
+      color: var(--cyan);
+      padding: 2px 8px;
+      border-radius: 100px;
+      letter-spacing: 0.04em;
+      transition: all 0.25s ease;
+    }
+    .author-badge:hover .connect-tag {
+      background: var(--cyan);
+      color: #ffffff;
+    }
+    /* ── Top Controls Bar ── */
+    .top-controls {
+      position: absolute;
+      top: 28px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ctrl-label {
+      font-size: 0.78rem;
+      color: var(--txt3);
+      font-weight: 600;
+    }
+    .theme-sel {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--txt);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      outline: none;
+      cursor: pointer;
+    }
+    .theme-sel:hover { border-color: rgba(0,0,0,0.2); }
+    [data-theme="dark"] .theme-sel:hover { border-color: rgba(255,255,255,0.2); }
+    .theme-sel option { background: var(--bg); color: var(--txt); }
+
+    @media (max-width: 850px) {
+      .top-controls {
+        position: relative;
+        top: 0;
+        right: 0;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="orb o3"></div>
+</div>
+
+<div class="wrap">
+
+  <header>
+    <div class="top-controls">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Currency:</span>
+        <select class="theme-sel" id="curr-sel" title="Select Currency">
+          <option value="INR" selected>₹ INR (Indian Rupee)</option>
+          <option value="USD">$ USD (US Dollar)</option>
+          <option value="EUR">€ EUR (Euro)</option>
+          <option value="GBP">£ GBP (British Pound)</option>
+          <option value="FRF">€ FRF (French Euro)</option>
+          <option value="CNY">¥ CNY (Chinese Yuan)</option>
+          <option value="JPY">¥ JPY (Japanese Yen)</option>
+          <option value="RUB">₽ RUB (Russian Ruble)</option>
+          <option value="AUD">A$ AUD (Australian Dollar)</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Theme:</span>
+        <select class="theme-sel" id="theme-sel" title="Select Theme">
+          <option value="light">Light Mode</option>
+          <option value="dark">Dark Theme</option>
+        </select>
+      </div>
+    </div>
+    <div class="badge">📊 Business Analytics</div>
+    <h1>BreakEven <span class="grad">IQ</span></h1>
+    <div>
+      <a href="https://kaushik-g-portfolio.vercel.app" target="_blank" rel="noopener noreferrer" class="author-badge" title="Visit Kaushik's Portfolio">
+        <span class="author-avatar">KG</span>
+        <span>Built by <strong>Kaushik</strong></span>
+        <span class="connect-tag">Connect ↗</span>
+      </a>
+    </div>
+    <p class="sub">Slide the controls to find your profit threshold in real time</p>
+  </header>
+
+  <!-- KPIs -->
+  <section class="kpis">
+    <div class="kpi kpi-bep">
+      <div class="kpi-ico">🎯</div>
+      <div class="kpi-lbl">Break-Even Units</div>
+      <div class="kpi-val" id="k-bu">—</div>
+      <div class="kpi-sub">Units needed to break even</div>
+    </div>
+    <div class="kpi kpi-rev">
+      <div class="kpi-ico">💰</div>
+      <div class="kpi-lbl">Break-Even Revenue</div>
+      <div class="kpi-val" id="k-br">—</div>
+      <div class="kpi-sub">Total revenue at BEP</div>
+    </div>
+    <div class="kpi kpi-pnl">
+      <div class="kpi-ico" id="k-pi">📈</div>
+      <div class="kpi-lbl">Current Profit / Loss</div>
+      <div class="kpi-val" id="k-pv">—</div>
+      <div class="kpi-sub" id="k-ps">At current units sold</div>
+    </div>
+    <div class="kpi kpi-cm">
+      <div class="kpi-ico">📐</div>
+      <div class="kpi-lbl">Contribution Margin</div>
+      <div class="kpi-val" id="k-cm">—</div>
+      <div class="kpi-sub">Price − Variable Cost/unit</div>
+    </div>
+  </section>
+
+  <div class="main">
+
+    <!-- Sliders -->
+    <aside class="panel">
+      <div class="ph"><span class="ph-ico">🎛️</span> Control Panel</div>
+
+      <!-- Fixed Costs -->
+      <div class="sg">
+        <div class="sg-top">
+          <label class="sg-lbl" for="s-fc">
+            <span class="dot" style="background:var(--orange);box-shadow:0 0 8px var(--orange)"></span>
+            Fixed Costs
+          </label>
+          <div class="sg-vbox">
+            <span class="cur cur-sym">₹</span>
+            <input class="vinp" type="text" id="n-fc" inputmode="numeric" value="1,00,000"/>
+          </div>
+        </div>
+        <input type="range" class="r-or" id="s-fc" min="0" max="100000000" step="100000" value="100000"/>
+        <div class="rlabs"><span class="cur-min">₹0</span><span id="lbl-fc-max">₹10 Cr</span></div>
+        <p class="hint">Rent, salaries, insurance — costs that don't change with output</p>
+      </div>
+
+      <!-- Variable Cost -->
+      <div class="sg">
+        <div class="sg-top">
+          <label class="sg-lbl" for="s-vc">
+            <span class="dot" style="background:var(--pink);box-shadow:0 0 8px var(--pink)"></span>
+            Variable Cost / Unit
+          </label>
+          <div class="sg-vbox">
+            <span class="cur cur-sym">₹</span>
+            <input class="vinp" type="text" id="n-vc" inputmode="numeric" value="200"/>
+          </div>
+        </div>
+        <input type="range" class="r-pk" id="s-vc" min="0" max="10000000" step="1000" value="200"/>
+        <div class="rlabs"><span class="cur-min">₹0</span><span id="lbl-vc-max">₹1 Cr</span></div>
+        <p class="hint">Raw materials, packaging — costs per unit produced</p>
+      </div>
+
+      <!-- Selling Price -->
+      <div class="sg">
+        <div class="sg-top">
+          <label class="sg-lbl" for="s-sp">
+            <span class="dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan)"></span>
+            Selling Price / Unit
+          </label>
+          <div class="sg-vbox">
+            <span class="cur cur-sym">₹</span>
+            <input class="vinp" type="text" id="n-sp" inputmode="numeric" value="500"/>
+          </div>
+        </div>
+        <input type="range" class="r-cy" id="s-sp" min="0" max="10000000" step="1000" value="500"/>
+        <div class="rlabs"><span class="cur-min">₹0</span><span id="lbl-sp-max">₹1 Cr</span></div>
+        <p class="hint">Price you charge the customer per unit</p>
+      </div>
+
+      <!-- Units Sold -->
+      <div class="sg">
+        <div class="sg-top">
+          <label class="sg-lbl" for="s-us">
+            <span class="dot" style="background:var(--green);box-shadow:0 0 8px var(--green)"></span>
+            Units Sold
+          </label>
+          <div class="sg-vbox">
+            <input class="vinp" type="text" id="n-us" inputmode="numeric" value="600" style="padding-left:8px;text-align:left;"/>
+            <span class="ulab">units</span>
+          </div>
+        </div>
+        <input type="range" class="r-gn" id="s-us" min="0" max="10000000" step="1000" value="600"/>
+        <div class="rlabs"><span>0</span><span id="lbl-us-max">1 Cr</span></div>
+        <p class="hint">Actual or projected units you plan to sell</p>
+      </div>
+
+      <!-- Status -->
+      <div class="sb loss" id="sb">
+        <span id="sb-ico">⚡</span>
+        <span id="sb-txt">Calculating…</span>
+      </div>
+    </aside>
+
+    <!-- Chart -->
+    <section class="panel chart-panel">
+      <div class="ph">
+        <span class="ph-ico">📈</span>
+        Break-Even Graph
+        <div class="leg">
+          <span class="leg-i"><span class="leg-d" style="background:var(--orange)"></span>Total Costs</span>
+          <span class="leg-i"><span class="leg-d" style="background:var(--cyan)"></span>Total Revenue</span>
+        </div>
+      </div>
+      <div class="cw">
+        <canvas id="bep"></canvas>
+      </div>
+      <p class="cnote">
+        The intersection of <strong>Revenue</strong> and <strong>Total Cost</strong> lines is the Break-Even Point
+      </p>
+    </section>
+
+  </div>
+
+  <!-- Insights -->
+  <section class="insights">
+    <div class="ic">
+      <div class="ic-t">💡 Profit Zone</div>
+      <div class="ic-b" id="i-profit">Loading…</div>
+    </div>
+    <div class="ic">
+      <div class="ic-t">📉 Cost Breakdown</div>
+      <div class="ic-b" id="i-cost">Loading…</div>
+    </div>
+    <div class="ic">
+      <div class="ic-t">🔑 Margin of Safety</div>
+      <div class="ic-b" id="i-mos">Units beyond break-even: <strong id="mos">—</strong></div>
+    </div>
+  </section>
+
+  <footer>BreakEven IQ &bull; Built by <a href="https://kaushik-g-portfolio.vercel.app" target="_blank" rel="noopener noreferrer" style="color:var(--cyan);text-decoration:none;font-weight:600;">Kaushik ↗</a> &bull; <span id="footer-curr">Values in Indian Rupee (₹)</span></footer>
+</div>
+
+<script>
+// ── Elements ──────────────────────────────────────────────────
+const sFC = document.getElementById('s-fc'), nFC = document.getElementById('n-fc');
+const sVC = document.getElementById('s-vc'), nVC = document.getElementById('n-vc');
+const sSP = document.getElementById('s-sp'), nSP = document.getElementById('n-sp');
+const sUS = document.getElementById('s-us'), nUS = document.getElementById('n-us');
+
+const kBU = document.getElementById('k-bu');
+const kBR = document.getElementById('k-br');
+const kPV = document.getElementById('k-pv');
+const kPS = document.getElementById('k-ps');
+const kPI = document.getElementById('k-pi');
+const kCM = document.getElementById('k-cm');
+const sb  = document.getElementById('sb');
+const sbI = document.getElementById('sb-ico');
+const sbT = document.getElementById('sb-txt');
+const iPf = document.getElementById('i-profit');
+const iCs = document.getElementById('i-cost');
+const mos = document.getElementById('mos');
+
+const canvas = document.getElementById('bep');
+const ctx    = canvas.getContext('2d');
+
+// ── Helpers ───────────────────────────────────────────────────
+function getCssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+function hexToRgba(hex, alpha) {
+  let r = 0, g = 0, b = 0;
+  if (hex.length === 4) {
+    r = parseInt(hex[1]+hex[1], 16);
+    g = parseInt(hex[2]+hex[2], 16);
+    b = parseInt(hex[3]+hex[3], 16);
+  } else if (hex.length === 7) {
+    r = parseInt(hex.slice(1, 3), 16);
+    g = parseInt(hex.slice(3, 5), 16);
+    b = parseInt(hex.slice(5, 7), 16);
+  }
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ── Currencies Configuration ──────────────────────────────────
+const CURRENCIES = {
+  INR: { name: 'Indian Rupee', symbol: '₹', locale: 'en-IN', system: 'lakhs' },
+  USD: { name: 'US Dollar', symbol: '$', locale: 'en-US', system: 'millions' },
+  EUR: { name: 'Euro', symbol: '€', locale: 'de-DE', system: 'millions' },
+  GBP: { name: 'British Pound', symbol: '£', locale: 'en-GB', system: 'millions' },
+  FRF: { name: 'French Euro', symbol: '€', locale: 'fr-FR', system: 'millions' },
+  CNY: { name: 'Chinese Yuan', symbol: '¥', locale: 'zh-CN', system: 'millions' },
+  JPY: { name: 'Japanese Yen', symbol: '¥', locale: 'ja-JP', system: 'millions' },
+  RUB: { name: 'Russian Ruble', symbol: '₽', locale: 'ru-RU', system: 'millions' },
+  AUD: { name: 'Australian Dollar', symbol: 'A$', locale: 'en-AU', system: 'millions' }
+};
+let currentCurrKey = 'INR';
+
+function money(v) {
+  if (!isFinite(v)) return '—';
+  const c = CURRENCIES[currentCurrKey];
+  const a = Math.abs(v);
+  const sym = c.symbol;
+  if (c.system === 'lakhs') {
+    if (a >= 1e7) return sym + (a/1e7).toFixed(2) + ' Cr';
+    if (a >= 1e5) return sym + (a/1e5).toFixed(2) + ' L';
+    return sym + a.toLocaleString(c.locale, {maximumFractionDigits:0});
+  } else {
+    if (a >= 1e9) return sym + (a/1e9).toFixed(2) + ' B';
+    if (a >= 1e6) return sym + (a/1e6).toFixed(2) + ' M';
+    if (a >= 1e3) return sym + (a/1e3).toFixed(1) + ' K';
+    return sym + a.toLocaleString(c.locale, {maximumFractionDigits:0});
+  }
+}
+
+function fmtUnits(v) {
+  if (!isFinite(v)) return '—';
+  const c = CURRENCIES[currentCurrKey];
+  const a = Math.abs(v);
+  if (c.system === 'lakhs') {
+    if (a >= 1e7) return (a/1e7).toFixed(0) + ' Cr';
+    if (a >= 1e5) return (a/1e5).toFixed(0) + ' L';
+    return a.toLocaleString('en-IN');
+  } else {
+    if (a >= 1e9) return (a/1e9).toFixed(0) + ' B';
+    if (a >= 1e6) return (a/1e6).toFixed(0) + ' M';
+    if (a >= 1e3) return (a/1e3).toFixed(0) + ' K';
+    return a.toLocaleString(c.locale);
+  }
+}
+
+function setKPI(el, text) {
+  el.classList.remove('popping');
+  void el.offsetWidth;
+  el.textContent = text;
+  el.classList.add('popping');
+}
+
+function fillSlider(s, cls) {
+  const pct = ((s.value - s.min) / (s.max - s.min)) * 100;
+  s.style.setProperty('--p', pct + '%');
+}
+
+// ── Canvas chart ──────────────────────────────────────────────
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  canvas.width  = wrap.clientWidth  * devicePixelRatio;
+  canvas.height = wrap.clientHeight * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+}
+
+function drawChart(FC, VC, SP, US, bepU) {
+  const wrap = canvas.parentElement;
+  const W = wrap.clientWidth;
+  const H = wrap.clientHeight;
+
+  // Resize if needed
+  if (canvas.width !== Math.round(W * devicePixelRatio)) {
+    canvas.width  = Math.round(W * devicePixelRatio);
+    canvas.height = Math.round(H * devicePixelRatio);
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Padding
+  const pl = 72, pr = 28, pt = 36, pb = 48;
+  const cW = W - pl - pr;
+  const cH = H - pt - pb;
+
+  // X range — dynamically scale to BEP so intersection is always clearly visible
+  const usMax = Number(sUS.max);
+  let xMax;
+  if (bepU != null) {
+    // Ideally show up to 1.3× units sold, but if US is incredibly huge compared to BEP,
+    // cap the chart scale at 3× BEP so the BEP intersection remains the main focus.
+    const bepBased  = Math.ceil(bepU * 2.2);
+    const maxScaleLimit = Math.ceil(bepU * 3); 
+    const soldBased = Math.min(Math.ceil(US * 1.3), maxScaleLimit);
+    
+    xMax = Math.min(Math.max(bepBased, soldBased, 10), usMax);
+  } else {
+    // No BEP (CM ≤ 0): just show units-sold range with headroom
+    xMax = Math.min(Math.max(Math.ceil(US * 1.5), 10), usMax);
+  }
+
+  // Data points
+  const STEPS = 100;
+  const xs = [], tcs = [], revs = [];
+  for (let i = 0; i <= STEPS; i++) {
+    const u = (i / STEPS) * xMax;
+    xs.push(u);
+    tcs.push(FC + VC * u);
+    revs.push(SP * u);
+  }
+
+  // Y range
+  const allY = [...tcs, ...revs];
+  const yMax = Math.max(...allY) * 1.08 || 1000;
+  const yMin = 0;
+
+  const cOrange = getCssVar('--orange');
+  const cCyan = getCssVar('--cyan');
+  const cTxt3 = getCssVar('--txt3');
+  const cBorder = getCssVar('--border');
+  const cBg = getCssVar('--bg');
+
+  function px(u) { return pl + (u / xMax) * cW; }
+  function py(v) { return pt + cH - ((v - yMin) / (yMax - yMin)) * cH; }
+
+  // ── Grid lines ──
+  ctx.strokeStyle = cBorder;
+  ctx.lineWidth = 1;
+  const yTicks = 6;
+  for (let i = 0; i <= yTicks; i++) {
+    const v  = yMin + (i / yTicks) * (yMax - yMin);
+    const y  = py(v);
+    ctx.beginPath();
+    ctx.moveTo(pl, y); ctx.lineTo(pl + cW, y);
+    ctx.stroke();
+  }
+  const xTicks = 8;
+  for (let i = 0; i <= xTicks; i++) {
+    const u = (i / xTicks) * xMax;
+    const x = px(u);
+    ctx.beginPath();
+    ctx.moveTo(x, pt); ctx.lineTo(x, pt + cH);
+    ctx.stroke();
+  }
+
+  // ── Axis labels ──
+  ctx.fillStyle = cTxt3;
+  ctx.font = '10px JetBrains Mono, monospace';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= yTicks; i++) {
+    const v = yMin + (i / yTicks) * (yMax - yMin);
+    const y = py(v);
+    ctx.fillText(money(v), pl - 6, y + 3.5);
+  }
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= xTicks; i++) {
+    const u = (i / xTicks) * xMax;
+    const x = px(u);
+    const lbl = u >= 1000 ? (u/1000).toFixed(0)+'K' : Math.round(u).toString();
+    ctx.fillText(lbl, x, pt + cH + 16);
+  }
+
+  // Axis titles
+  ctx.fillStyle = cTxt3;
+  ctx.font = '600 11px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Units Sold →', pl + cW / 2, H - 4);
+  ctx.save();
+  ctx.translate(14, pt + cH / 2);
+  ctx.rotate(-Math.PI / 2);
+  const curSym = CURRENCIES[currentCurrKey].symbol;
+  ctx.fillText(`Amount (${curSym}) →`, 0, 0);
+  ctx.restore();
+
+  // ── Total Cost line ──
+  const tcGrad = ctx.createLinearGradient(0, pt, 0, pt + cH);
+  tcGrad.addColorStop(0, hexToRgba(cOrange, 0.45));
+  tcGrad.addColorStop(1, hexToRgba(cOrange, 0.03));
+
+  ctx.beginPath();
+  xs.forEach((u, i) => {
+    const x = px(u), y = py(tcs[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(px(xMax), py(yMin));
+  ctx.lineTo(px(0), py(yMin));
+  ctx.closePath();
+  ctx.fillStyle = tcGrad;
+  ctx.fill();
+
+  ctx.beginPath();
+  xs.forEach((u, i) => {
+    const x = px(u), y = py(tcs[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = cOrange;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.setLineDash([]);
+  ctx.stroke();
+
+  // ── Revenue line ──
+  const revGrad = ctx.createLinearGradient(0, pt, 0, pt + cH);
+  revGrad.addColorStop(0, hexToRgba(cCyan, 0.4));
+  revGrad.addColorStop(1, hexToRgba(cCyan, 0.03));
+
+  ctx.beginPath();
+  xs.forEach((u, i) => {
+    const x = px(u), y = py(revs[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(px(xMax), py(yMin));
+  ctx.lineTo(px(0), py(yMin));
+  ctx.closePath();
+  ctx.fillStyle = revGrad;
+  ctx.fill();
+
+  ctx.beginPath();
+  xs.forEach((u, i) => {
+    const x = px(u), y = py(revs[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = cCyan;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // ── BEP vertical marker ──
+  if (bepU != null && bepU >= 0 && bepU <= xMax) {
+    const bx  = px(bepU);
+    const bRev = SP * bepU;
+    const by  = py(bRev);
+
+    // Dashed vertical line
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = hexToRgba(cCyan, 0.65);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(bx, pt);
+    ctx.lineTo(bx, pt + cH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Circle at intersection
+    ctx.beginPath();
+    ctx.arc(bx, by, 9, 0, Math.PI * 2);
+    ctx.fillStyle = cCyan;
+    ctx.fill();
+    ctx.strokeStyle = cBg;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // "BEP" badge
+    const badgeW = 42, badgeH = 20, badgeR = 10;
+    const bLx = bx - badgeW / 2;
+    const bLy = pt + 8;
+    ctx.beginPath();
+    ctx.roundRect(bLx, bLy, badgeW, badgeH, badgeR);
+    ctx.fillStyle = cCyan;
+    ctx.fill();
+    ctx.fillStyle = cBg;
+    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BEP', bx, bLy + 14);
+  }
+
+  // ── Current units marker ──
+  if (US <= xMax) {
+    const ux = px(US);
+    const uRevY = py(SP * US);
+    const uTcY  = py(FC + VC * US);
+    ctx.fillStyle = 'rgba(74,222,128,0.9)';
+    ctx.beginPath();
+    ctx.arc(ux, uRevY, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(249,115,22,0.9)';
+    ctx.beginPath();
+    ctx.arc(ux, uTcY, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ── Main calculate ────────────────────────────────────────────
+function calc() {
+  const FC = +sFC.value, VC = +sVC.value, SP = +sSP.value, US = +sUS.value;
+  const CM = SP - VC;
+
+  let bepU = null, bepR = null;
+  if (CM > 0) { bepU = FC / CM; bepR = bepU * SP; }
+
+  const totRev  = US * SP;
+  const totCost = FC + US * VC;
+  const pnl     = totRev - totCost;
+
+  // KPIs
+  const curLocale = CURRENCIES[currentCurrKey].locale;
+  const curSym = CURRENCIES[currentCurrKey].symbol;
+  setKPI(kBU, bepU != null ? Math.ceil(bepU).toLocaleString(curLocale) + ' u' : '∞');
+  setKPI(kBR, bepR != null ? money(bepR) : '∞');
+  setKPI(kCM, CM >= 0 ? money(CM) : '−' + money(-CM));
+  const pSign = pnl >= 0 ? '+' : '−';
+  setKPI(kPV, pSign + money(Math.abs(pnl)));
+  kPV.style.color = pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--cyan)';
+  kPI.textContent = pnl > 0 ? '📈' : pnl < 0 ? '📉' : '⚖️';
+  kPS.textContent = pnl === 0 ? 'Exactly at break-even' : pnl > 0 ? 'Net profit' : 'Net loss';
+
+  // Status banner
+  sb.className = 'sb';
+  if (CM <= 0) {
+    sb.classList.add('loss'); sbI.textContent = '⚠️';
+    sbT.textContent = 'Price must exceed variable cost to break even!';
+  } else if (pnl > 0) {
+    sb.classList.add('profit'); sbI.textContent = '🎉';
+    sbT.textContent = `Profitable! Break-even at ${Math.ceil(bepU).toLocaleString(curLocale)} units.`;
+  } else if (pnl < 0) {
+    sb.classList.add('loss'); sbI.textContent = '⚡';
+    sbT.textContent = `Need ${Math.ceil(bepU - US).toLocaleString(curLocale)} more units to break even.`;
+  } else {
+    sb.classList.add('breakev'); sbI.textContent = '🎯';
+    sbT.textContent = 'Exactly at break-even point!';
+  }
+
+  // Insights
+  const mosV = bepU != null ? Math.max(0, US - bepU) : 0;
+  mos.textContent = Math.round(mosV).toLocaleString(curLocale) + (mosV === 0 ? ' (below BEP)' : ' units above BEP');
+  iPf.innerHTML = bepU != null && US > bepU
+    ? `You are <em>above</em> BEP by <strong>${Math.round(mosV).toLocaleString(curLocale)} units</strong>. Each extra unit nets you <strong>${money(CM)}</strong>.`
+    : `You have <em>not crossed</em> BEP yet. Sell more units or increase price.`;
+  iCs.innerHTML = bepU != null
+    ? `BEP revenue is <strong>${money(bepR)}</strong>. Fixed costs are <strong>${FC > 0 && bepR > 0 ? Math.round((FC/bepR)*100) : 0}%</strong> of that.`
+    : `Cannot break even — price (${curSym}${SP}) ≤ variable cost (${curSym}${VC}). Adjust inputs.`;
+
+  // Draw
+  drawChart(FC, VC, SP, US, bepU);
+}
+
+// ── Multi-Currency & Locale number formatting ─────────────────
+function fmtNum(n) {
+  const c = CURRENCIES[currentCurrKey];
+  if (c.system === 'lakhs') {
+    const s = Math.round(n).toString();
+    if (s.length <= 3) return s;
+    const last3 = s.slice(-3);
+    const rest   = s.slice(0, -3);
+    return rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + last3;
+  } else {
+    return Math.round(n).toLocaleString(c.locale);
+  }
+}
+function parseNum(s) {
+  return parseFloat(String(s).replace(/,/g, '').replace(/ /g, '')) || 0;
+}
+
+// ── Sync slider ↔ text input ──────────────────────────────────
+function bind(sl, ni) {
+  // Slider moves → update text with currency formatting
+  sl.addEventListener('input', () => {
+    ni.value = fmtNum(+sl.value);
+    fillSlider(sl);
+    calc();
+  });
+
+  // Focus: strip formatting so user can type freely
+  ni.addEventListener('focus', () => {
+    ni.value = sl.value;
+    ni.select();
+  });
+
+  // While typing: live-update slider (ignore commas mid-typing)
+  ni.addEventListener('input', () => {
+    const raw = parseNum(ni.value);
+    if (!isNaN(raw)) {
+      const clamped = Math.max(+sl.min, Math.min(+sl.max, raw));
+      sl.value = clamped;
+      fillSlider(sl);
+      calc();
+    }
+  });
+
+  // Blur: reformat
+  ni.addEventListener('blur', () => {
+    const clamped = Math.max(+sl.min, Math.min(+sl.max, parseNum(ni.value)));
+    sl.value = clamped;
+    ni.value  = fmtNum(clamped);
+    fillSlider(sl);
+    calc();
+  });
+}
+bind(sFC, nFC); bind(sVC, nVC); bind(sSP, nSP); bind(sUS, nUS);
+
+// Initialise slider fills + formatted display
+[{s:sFC,n:nFC},{s:sVC,n:nVC},{s:sSP,n:nSP}].forEach(({s,n}) => {
+  fillSlider(s);
+  n.value = fmtNum(+s.value);
+});
+fillSlider(sUS);
+nUS.value = fmtNum(+sUS.value);
+
+// ── Currency Switcher ───────────────────────────────────────────
+const currSel = document.getElementById('curr-sel');
+currSel.addEventListener('change', (e) => {
+  currentCurrKey = e.target.value;
+  const c = CURRENCIES[currentCurrKey];
+  
+  // Update currency symbols next to inputs
+  document.querySelectorAll('.cur-sym').forEach(el => el.textContent = c.symbol);
+  document.querySelectorAll('.cur-min').forEach(el => el.textContent = c.symbol + '0');
+  
+  // Update slider max labels
+  document.getElementById('lbl-fc-max').textContent = money(sFC.max);
+  document.getElementById('lbl-vc-max').textContent = money(sVC.max);
+  document.getElementById('lbl-sp-max').textContent = money(sSP.max);
+  const usLbl = document.getElementById('lbl-us-max');
+  if (usLbl) usLbl.textContent = fmtUnits(sUS.max);
+  
+  // Update inputs formatting
+  [{s:sFC,n:nFC},{s:sVC,n:nVC},{s:sSP,n:nSP}].forEach(({s,n}) => {
+    n.value = fmtNum(+s.value);
+  });
+  
+  // Update footer note
+  const ft = document.getElementById('footer-curr');
+  if (ft) ft.textContent = `Values in ${c.name} (${c.symbol})`;
+  
+  calc();
+});
+
+// ── Theme Switcher ──────────────────────────────────────────────
+const themeSel = document.getElementById('theme-sel');
+themeSel.addEventListener('change', (e) => {
+  const theme = e.target.value;
+  if (theme === 'light') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+  // Force a redraw so chart colors update to new theme variables
+  calc();
+});
+
+// ── Redraw on resize ──────────────────────────────────────────
+window.addEventListener('resize', () => calc());
+
+// ── Initial draw ──────────────────────────────────────────────
+calc();
+</script>
+</body>
+</html>
