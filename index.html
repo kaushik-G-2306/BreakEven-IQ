@@ -332,15 +332,21 @@
       background: var(--cyan);
       color: #ffffff;
     }
-    /* ── Top Controls Bar ── */
-    .top-controls {
-      position: absolute;
-      top: 28px;
-      right: 20px;
+    /* ── Top Bar ── */
+    .top-bar {
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
       flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-left: auto;
     }
     .ctrl-group {
       display: flex;
@@ -368,62 +374,14 @@
     [data-theme="dark"] .theme-sel:hover { border-color: rgba(255,255,255,0.2); }
     .theme-sel option { background: var(--bg); color: var(--txt); }
 
-    /* ── Formula Card ── */
-    .formula-card {
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 18px;
-      margin-top: 14px;
-      text-align: center;
-    }
-    .formula-math {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--txt);
-      margin-bottom: 4px;
-    }
-    .formula-live {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.92rem;
-      font-weight: 600;
-      color: var(--cyan);
-      margin-bottom: 4px;
-    }
-    .formula-sub {
-      font-size: 0.76rem;
-      color: var(--txt3);
-      font-style: italic;
-    }
-
-    /* ── PPT Slide Mode ── */
-    body.ppt-mode header .badge,
-    body.ppt-mode header h1,
-    body.ppt-mode header .author-badge,
-    body.ppt-mode header .sub,
-    body.ppt-mode .kpis,
-    body.ppt-mode .insights,
-    body.ppt-mode footer,
-    body.ppt-mode .bg,
-    body.ppt-mode .hint {
-      display: none !important;
-    }
-    body.ppt-mode .wrap {
-      padding: 10px !important;
-      max-width: 1050px !important;
-    }
-    body.ppt-mode header {
-      margin-bottom: 12px !important;
-    }
-    body.ppt-mode .top-controls {
-      position: relative !important;
-      top: 0 !important;
-      right: 0 !important;
-      justify-content: flex-end !important;
-    }
-    body.ppt-mode .main {
-      margin-bottom: 0 !important;
+    @media (max-width: 768px) {
+      .top-bar {
+        justify-content: center;
+      }
+      .top-controls {
+        margin-left: 0;
+        justify-content: center;
+      }
     }
   </style>
 </head>
@@ -438,31 +396,33 @@
 <div class="wrap">
 
   <header>
-    <div class="top-controls">
-      <div class="ctrl-group">
-        <span class="ctrl-label">Currency:</span>
-        <select class="theme-sel" id="curr-sel" title="Select Currency">
-          <option value="INR" selected>₹ INR (Indian Rupee)</option>
-          <option value="USD">$ USD (US Dollar)</option>
-          <option value="EUR">€ EUR (Euro)</option>
-          <option value="GBP">£ GBP (British Pound)</option>
-          <option value="FRF">€ FRF (French Euro)</option>
-          <option value="CNY">¥ CNY (Chinese Yuan)</option>
-          <option value="JPY">¥ JPY (Japanese Yen)</option>
-          <option value="RUB">₽ RUB (Russian Ruble)</option>
-          <option value="AUD">A$ AUD (Australian Dollar)</option>
-        </select>
+    <div class="top-bar">
+      <div class="badge" style="margin-bottom:0;">📊 Business Analytics</div>
+      <div class="top-controls">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Currency:</span>
+          <select class="theme-sel" id="curr-sel" title="Select Currency">
+            <option value="INR" selected>₹ INR (Indian Rupee)</option>
+            <option value="USD">$ USD (US Dollar)</option>
+            <option value="EUR">€ EUR (Euro)</option>
+            <option value="GBP">£ GBP (British Pound)</option>
+            <option value="FRF">€ FRF (French Euro)</option>
+            <option value="CNY">¥ CNY (Chinese Yuan)</option>
+            <option value="JPY">¥ JPY (Japanese Yen)</option>
+            <option value="RUB">₽ RUB (Russian Ruble)</option>
+            <option value="AUD">A$ AUD (Australian Dollar)</option>
+          </select>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Theme:</span>
+          <select class="theme-sel" id="theme-sel" title="Select Theme">
+            <option value="light">Light Mode</option>
+            <option value="dark">Dark Theme</option>
+          </select>
+        </div>
+        <button class="theme-sel" id="ppt-btn" title="Toggle Slide / PPT Embed Mode">📺 Slide Mode</button>
       </div>
-      <div class="ctrl-group">
-        <span class="ctrl-label">Theme:</span>
-        <select class="theme-sel" id="theme-sel" title="Select Theme">
-          <option value="light">Light Mode</option>
-          <option value="dark">Dark Theme</option>
-        </select>
-      </div>
-      <button class="theme-sel" id="ppt-btn" title="Toggle Slide / PPT Embed Mode">📺 Slide Mode</button>
     </div>
-    <div class="badge">📊 Business Analytics</div>
     <h1>BreakEven <span class="grad">IQ</span></h1>
     <div>
       <a href="https://kaushik-g-portfolio.vercel.app" target="_blank" rel="noopener noreferrer" class="author-badge" title="Visit Kaushik's Portfolio">
