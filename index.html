@@ -365,11 +365,89 @@
     }
     .theme-sel:hover { border-color: rgba(0,0,0,0.2); }
     [data-theme="dark"] .theme-sel:hover { border-color: rgba(255,255,255,0.2); }
-    .theme-sel option { background: var(--bg); color: var(--txt); }
+    /* ── Formula Card ── */
+    .formula-card {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-top: 14px;
+      text-align: center;
+    }
+    .formula-math {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--txt);
+      margin-bottom: 4px;
+    }
+    .formula-live {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--cyan);
+      margin-bottom: 4px;
+    }
+    .formula-sub {
+      font-size: 0.76rem;
+      color: var(--txt3);
+      font-style: italic;
+    }
+
+    /* ── Slide / PPT Presentation Mode ── */
+    body.ppt-mode header h1,
+    body.ppt-mode header div:has(.author-badge),
+    body.ppt-mode header .sub,
+    body.ppt-mode .kpis,
+    body.ppt-mode .insights,
+    body.ppt-mode footer,
+    body.ppt-mode .bg,
+    body.ppt-mode .hint,
+    body.ppt-mode .sb {
+      display: none !important;
+    }
+    body.ppt-mode .wrap {
+      padding: 16px 20px !important;
+      max-width: 1100px !important;
+    }
+    body.ppt-mode header {
+      margin-bottom: 8px !important;
+    }
+    body.ppt-mode .top-controls {
+      margin-bottom: 8px !important;
+    }
+    body.ppt-mode #ppt-btn {
+      background: var(--cyan) !important;
+      color: #ffffff !important;
+      border-color: var(--cyan) !important;
+    }
+    body.ppt-mode .main {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 16px !important;
+    }
+    body.ppt-mode .chart-panel {
+      order: 1;
+    }
+    body.ppt-mode aside.panel {
+      order: 2;
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 16px !important;
+    }
+    body.ppt-mode aside.panel .ph {
+      grid-column: 1 / -1;
+    }
+    body.ppt-mode .sg {
+      margin-bottom: 0 !important;
+    }
 
     @media (max-width: 768px) {
       .top-controls {
         justify-content: center;
+      }
+      body.ppt-mode aside.panel {
+        grid-template-columns: 1fr !important;
       }
     }
   </style>
