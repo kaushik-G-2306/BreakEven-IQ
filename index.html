@@ -49,7 +49,7 @@
     }
 
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
       color: var(--txt);
       min-height: 100vh;
@@ -368,14 +368,62 @@
     [data-theme="dark"] .theme-sel:hover { border-color: rgba(255,255,255,0.2); }
     .theme-sel option { background: var(--bg); color: var(--txt); }
 
-    @media (max-width: 850px) {
-      .top-controls {
-        position: relative;
-        top: 0;
-        right: 0;
-        justify-content: center;
-        margin-bottom: 20px;
-      }
+    /* ── Formula Card ── */
+    .formula-card {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-top: 14px;
+      text-align: center;
+    }
+    .formula-math {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--txt);
+      margin-bottom: 4px;
+    }
+    .formula-live {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--cyan);
+      margin-bottom: 4px;
+    }
+    .formula-sub {
+      font-size: 0.76rem;
+      color: var(--txt3);
+      font-style: italic;
+    }
+
+    /* ── PPT Slide Mode ── */
+    body.ppt-mode header .badge,
+    body.ppt-mode header h1,
+    body.ppt-mode header .author-badge,
+    body.ppt-mode header .sub,
+    body.ppt-mode .kpis,
+    body.ppt-mode .insights,
+    body.ppt-mode footer,
+    body.ppt-mode .bg,
+    body.ppt-mode .hint {
+      display: none !important;
+    }
+    body.ppt-mode .wrap {
+      padding: 10px !important;
+      max-width: 1050px !important;
+    }
+    body.ppt-mode header {
+      margin-bottom: 12px !important;
+    }
+    body.ppt-mode .top-controls {
+      position: relative !important;
+      top: 0 !important;
+      right: 0 !important;
+      justify-content: flex-end !important;
+    }
+    body.ppt-mode .main {
+      margin-bottom: 0 !important;
     }
   </style>
 </head>
@@ -412,6 +460,7 @@
           <option value="dark">Dark Theme</option>
         </select>
       </div>
+      <button class="theme-sel" id="ppt-btn" title="Toggle Slide / PPT Embed Mode">📺 Slide Mode</button>
     </div>
     <div class="badge">📊 Business Analytics</div>
     <h1>BreakEven <span class="grad">IQ</span></h1>
@@ -540,16 +589,28 @@
         <span class="ph-ico">📈</span>
         Break-Even Graph
         <div class="leg">
-          <span class="leg-i"><span class="leg-d" style="background:var(--orange)"></span>Total Costs</span>
-          <span class="leg-i"><span class="leg-d" style="background:var(--cyan)"></span>Total Revenue</span>
+          <span class="leg-i"><span class="leg-d" style="background:var(--orange)"></span>Total Cost</span>
+          <span class="leg-i"><span class="leg-d" style="background:var(--cyan)"></span>Revenue</span>
+          <span class="leg-i"><span class="leg-d" style="background:rgba(248,113,113,0.7);border-radius:2px;"></span>Loss</span>
+          <span class="leg-i"><span class="leg-d" style="background:rgba(74,222,128,0.7);border-radius:2px;"></span>Profit</span>
         </div>
       </div>
       <div class="cw">
         <canvas id="bep"></canvas>
       </div>
-      <p class="cnote">
-        The intersection of <strong>Revenue</strong> and <strong>Total Cost</strong> lines is the Break-Even Point
-      </p>
+
+      <!-- Live Mathematical Formula Card -->
+      <div class="formula-card">
+        <div class="formula-math">
+          Q* = F / (p − v) &nbsp;=&nbsp; Fixed Cost / (Price − Variable Cost)
+        </div>
+        <div class="formula-live" id="formula-live">
+          Q* = 1,00,000 / (500 − 200) = 334 units
+        </div>
+        <p class="formula-sub">
+          Q* is the break-even quantity where total revenue matches total cost.
+        </p>
+      </div>
     </section>
 
   </div>
@@ -789,6 +850,30 @@ function drawChart(FC, VC, SP, US, bepU) {
   ctx.fillText(`Amount (${curSym}) →`, 0, 0);
   ctx.restore();
 
+  // ── Loss Area Shading (Red fill between Total Cost and Revenue before BEP) ──
+  if (bepU != null && bepU > 0) {
+    const endU = Math.min(bepU, xMax);
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(FC));
+    ctx.lineTo(px(endU), py(FC + VC * endU));
+    ctx.lineTo(px(0), py(0));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(248, 113, 113, 0.22)';
+    ctx.fill();
+  }
+
+  // ── Profit Area Shading (Green fill between Revenue and Total Cost after BEP) ──
+  if (bepU != null && xMax > bepU) {
+    const startU = Math.max(0, bepU);
+    ctx.beginPath();
+    ctx.moveTo(px(startU), py(SP * startU));
+    ctx.lineTo(px(xMax), py(SP * xMax));
+    ctx.lineTo(px(xMax), py(FC + VC * xMax));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.22)';
+    ctx.fill();
+  }
+
   // ── Total Cost line ──
   const tcGrad = ctx.createLinearGradient(0, pt, 0, pt + cH);
   tcGrad.addColorStop(0, hexToRgba(cOrange, 0.45));
@@ -946,6 +1031,16 @@ function calc() {
     ? `BEP revenue is <strong>${money(bepR)}</strong>. Fixed costs are <strong>${FC > 0 && bepR > 0 ? Math.round((FC/bepR)*100) : 0}%</strong> of that.`
     : `Cannot break even — price (${curSym}${SP}) ≤ variable cost (${curSym}${VC}). Adjust inputs.`;
 
+  // Update live mathematical formula card
+  const fLive = document.getElementById('formula-live');
+  if (fLive) {
+    if (CM > 0 && bepU != null) {
+      fLive.innerHTML = `Q* = F / (p − v) = ${fmtNum(FC)} / (${fmtNum(SP)} − ${fmtNum(VC)}) = <strong>${Math.ceil(bepU).toLocaleString(curLocale)} units</strong>`;
+    } else {
+      fLive.innerHTML = `Q* = Undefined (Selling price ≤ Variable cost)`;
+    }
+  }
+
   // Draw
   drawChart(FC, VC, SP, US, bepU);
 }
@@ -1053,6 +1148,16 @@ themeSel.addEventListener('change', (e) => {
   // Force a redraw so chart colors update to new theme variables
   calc();
 });
+
+// ── Slide / PPT Embed Mode Switcher ─────────────────────────────
+const pptBtn = document.getElementById('ppt-btn');
+if (pptBtn) {
+  pptBtn.addEventListener('click', () => {
+    document.body.classList.toggle('ppt-mode');
+    pptBtn.textContent = document.body.classList.contains('ppt-mode') ? '📺 Full View' : '📺 Slide Mode';
+    calc();
+  });
+}
 
 // ── Redraw on resize ──────────────────────────────────────────
 window.addEventListener('resize', () => calc());
