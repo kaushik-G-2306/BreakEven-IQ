@@ -332,21 +332,14 @@
       background: var(--cyan);
       color: #ffffff;
     }
-    /* ── Top Bar ── */
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-bottom: 20px;
-    }
+    /* ── Top Controls Bar (Extreme Right) ── */
     .top-controls {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
       gap: 10px;
       flex-wrap: wrap;
-      margin-left: auto;
+      margin-bottom: 16px;
     }
     .ctrl-group {
       display: flex;
@@ -375,11 +368,7 @@
     .theme-sel option { background: var(--bg); color: var(--txt); }
 
     @media (max-width: 768px) {
-      .top-bar {
-        justify-content: center;
-      }
       .top-controls {
-        margin-left: 0;
         justify-content: center;
       }
     }
@@ -395,34 +384,35 @@
 
 <div class="wrap">
 
-  <header>
-    <div class="top-bar">
-      <div class="badge" style="margin-bottom:0;">📊 Business Analytics</div>
-      <div class="top-controls">
-        <div class="ctrl-group">
-          <span class="ctrl-label">Currency:</span>
-          <select class="theme-sel" id="curr-sel" title="Select Currency">
-            <option value="INR" selected>₹ INR (Indian Rupee)</option>
-            <option value="USD">$ USD (US Dollar)</option>
-            <option value="EUR">€ EUR (Euro)</option>
-            <option value="GBP">£ GBP (British Pound)</option>
-            <option value="FRF">€ FRF (French Euro)</option>
-            <option value="CNY">¥ CNY (Chinese Yuan)</option>
-            <option value="JPY">¥ JPY (Japanese Yen)</option>
-            <option value="RUB">₽ RUB (Russian Ruble)</option>
-            <option value="AUD">A$ AUD (Australian Dollar)</option>
-          </select>
-        </div>
-        <div class="ctrl-group">
-          <span class="ctrl-label">Theme:</span>
-          <select class="theme-sel" id="theme-sel" title="Select Theme">
-            <option value="light">Light Mode</option>
-            <option value="dark">Dark Theme</option>
-          </select>
-        </div>
-        <button class="theme-sel" id="ppt-btn" title="Toggle Slide / PPT Embed Mode">📺 Slide Mode</button>
-      </div>
+  <!-- Top Controls Bar (Extreme Right) -->
+  <div class="top-controls">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Currency:</span>
+      <select class="theme-sel" id="curr-sel" title="Select Currency">
+        <option value="INR" selected>₹ INR (Indian Rupee)</option>
+        <option value="USD">$ USD (US Dollar)</option>
+        <option value="EUR">€ EUR (Euro)</option>
+        <option value="GBP">£ GBP (British Pound)</option>
+        <option value="FRF">€ FRF (French Euro)</option>
+        <option value="CNY">¥ CNY (Chinese Yuan)</option>
+        <option value="JPY">¥ JPY (Japanese Yen)</option>
+        <option value="RUB">₽ RUB (Russian Ruble)</option>
+        <option value="AUD">A$ AUD (Australian Dollar)</option>
+      </select>
     </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Theme:</span>
+      <select class="theme-sel" id="theme-sel" title="Select Theme">
+        <option value="light">Light Mode</option>
+        <option value="dark">Dark Theme</option>
+      </select>
+    </div>
+    <button class="theme-sel" id="ppt-btn" title="Toggle Slide / PPT Embed Mode">📺 Slide Mode</button>
+  </div>
+
+  <!-- Main Centered Header -->
+  <header>
+    <div class="badge">📊 Business Analytics</div>
     <h1>BreakEven <span class="grad">IQ</span></h1>
     <div>
       <a href="https://kaushik-g-portfolio.vercel.app" target="_blank" rel="noopener noreferrer" class="author-badge" title="Visit Kaushik's Portfolio">
