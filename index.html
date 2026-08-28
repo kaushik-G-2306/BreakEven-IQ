@@ -471,8 +471,8 @@
             <input class="vinp" type="text" id="n-fc" inputmode="numeric" value="1,00,000"/>
           </div>
         </div>
-        <input type="range" class="r-or" id="s-fc" min="0" max="100000000" step="100000" value="100000"/>
-        <div class="rlabs"><span class="cur-min">₹0</span><span id="lbl-fc-max">₹10 Cr</span></div>
+        <input type="range" class="r-or" id="s-fc" min="0" max="10000000" step="10000" value="100000"/>
+        <div class="rlabs"><span class="cur-min">₹0</span><span id="lbl-fc-max">₹1 Cr</span></div>
         <p class="hint">Rent, salaries, insurance — costs that don't change with output</p>
       </div>
 
@@ -488,8 +488,8 @@
             <input class="vinp" type="text" id="n-vc" inputmode="numeric" value="200"/>
           </div>
         </div>
-        <input type="range" class="r-pk" id="s-vc" min="0" max="10000000" step="1000" value="200"/>
-        <div class="rlabs"><span class="cur-min">₹0</span><span id="lbl-vc-max">₹1 Cr</span></div>
+        <input type="range" class="r-pk" id="s-vc" min="0" max="100000" step="100" value="200"/>
+        <div class="rlabs"><span class="cur-min">₹0</span><span id="lbl-vc-max">₹1 L</span></div>
         <p class="hint">Raw materials, packaging — costs per unit produced</p>
       </div>
 
@@ -505,8 +505,8 @@
             <input class="vinp" type="text" id="n-sp" inputmode="numeric" value="500"/>
           </div>
         </div>
-        <input type="range" class="r-cy" id="s-sp" min="0" max="10000000" step="1000" value="500"/>
-        <div class="rlabs"><span class="cur-min">₹0</span><span id="lbl-sp-max">₹1 Cr</span></div>
+        <input type="range" class="r-cy" id="s-sp" min="0" max="100000" step="100" value="500"/>
+        <div class="rlabs"><span class="cur-min">₹0</span><span id="lbl-sp-max">₹1 L</span></div>
         <p class="hint">Price you charge the customer per unit</p>
       </div>
 
@@ -522,8 +522,8 @@
             <span class="ulab">units</span>
           </div>
         </div>
-        <input type="range" class="r-gn" id="s-us" min="0" max="10000000" step="1000" value="600"/>
-        <div class="rlabs"><span>0</span><span id="lbl-us-max">1 Cr</span></div>
+        <input type="range" class="r-gn" id="s-us" min="0" max="10000" step="10" value="600"/>
+        <div class="rlabs"><span>0</span><span id="lbl-us-max">10 K</span></div>
         <p class="hint">Actual or projected units you plan to sell</p>
       </div>
 
@@ -976,28 +976,28 @@ function bind(sl, ni) {
     calc();
   });
 
-  // Focus: strip formatting so user can type freely
+  // Focus: show raw number for easy editing
   ni.addEventListener('focus', () => {
-    ni.value = sl.value;
+    const raw = parseNum(ni.value);
+    ni.value = raw ? raw : '';
     ni.select();
   });
 
-  // While typing: live-update slider (ignore commas mid-typing)
+  // While typing: move slider thumb visually & calculate with actual entered value
   ni.addEventListener('input', () => {
     const raw = parseNum(ni.value);
     if (!isNaN(raw)) {
-      const clamped = Math.max(+sl.min, Math.min(+sl.max, raw));
-      sl.value = clamped;
+      sl.value = Math.max(+sl.min, Math.min(+sl.max, raw));
       fillSlider(sl);
       calc();
     }
   });
 
-  // Blur: reformat
+  // Blur: reformat display text with actual entered value (allows manual higher values)
   ni.addEventListener('blur', () => {
-    const clamped = Math.max(+sl.min, Math.min(+sl.max, parseNum(ni.value)));
-    sl.value = clamped;
-    ni.value  = fmtNum(clamped);
+    const raw = Math.max(0, parseNum(ni.value));
+    sl.value = Math.max(+sl.min, Math.min(+sl.max, raw));
+    ni.value = fmtNum(raw);
     fillSlider(sl);
     calc();
   });
